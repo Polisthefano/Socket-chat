@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Sing in</title>
+  </head>
+
+  <body>
+    <h1>Google Sing in</h1>
+    <hr />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <div
+      id="g_id_onload"
+      data-client_id="62740098740-95ov3k4emnnm00i1rlrpp4d6s7iitsl3.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="false"
+    ></div>
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left"
+    ></div>
+    <button id="singOutGoogle">SingOut</button>
+  </body>
+  <script>
+    function handleCredentialResponse(response) {
+      let url = window.location.hostname.includes("localhost")
+        ? "http://"
+        : "https://"; //contiene el host donde me encuentro
+      url = `${url}${window.location.host}`;
+      fetch(`${url}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: response.credential }), //al enviar en los headers el type el body siempre debe ir con JSON.stringify
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          //al parecer fetch en la primer response devuelve una promise por eso hay que concatenarla
+          localStorage.setItem("emailUser", res.usuario.correo);
+        })
+        .catch((err) => {
+          console.error("Error al autenticar con google ", err);
+        });
+    }
+    const button = document.getElementById("singOutGoogle");
+    button.onclick = () => {
+      console.log(google.accounts.id);
+      google.accounts.id.revoke(localStorage.getItem("emailUser"), (done) => {
+        //de esta manera google borra el token de sus datos y nosotros del local donde teniamos el email de logueado y recargamos la pagina para eliminar cualquier cache
+        localStorage.clear();
+        location.reload();
+      });
+    };
+  </script>
+</html>
