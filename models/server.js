@@ -1,8 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-const { dbConnection } = require("../database/config");
 const { swaggerDocs } = require("../swager");
+const { createServer } = require("http");
 const fileUpload = require("express-fileupload");
+
+const { dbConnection } = require("../database/config");
+const { socketController } = require("../sockets/controller.socket");
 class Server {
   //server orientado a objetos
 
@@ -10,6 +13,9 @@ class Server {
     this.app = express();
     this.port = process.env.PORT;
     this.urlBase = "/api/";
+    this.server = createServer(this.app);
+    this.io = require("socket.io")(this.server);
+
     this.paths = {
       usuarios: this.urlBase + "usuarios",
       auth: this.urlBase + "auth",
@@ -24,6 +30,8 @@ class Server {
     this.middlewares();
     //rutas
     this.routes();
+    //sockets
+    this.sockets();
   }
 
   async conectarDB() {
@@ -53,8 +61,13 @@ class Server {
     this.app.use(this.paths.buscar, require("../routes/buscar.routes"));
     this.app.use(this.paths.uploads, require("../routes/uploads.routes"));
   }
+
+  sockets() {
+    this.io.on("connection", socketController);
+  }
+
   listen() {
-    this.app.listen(this.port);
+    this.server.listen(this.port); //debe escuchar en el listen el server de sockets y no el de express
     swaggerDocs(this.app, this.port);
   }
 }

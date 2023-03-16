@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { Usuario } = require("../models/index");
 const generarJWT = (data) => {
   //   const token = jwt.sign(payload, "privateKey");
   return new Promise((resolve, reject) => {
@@ -17,4 +18,21 @@ const generarJWT = (data) => {
   }); //ya no es necesario porque la libreria tiene el metodo sincrono para hacer esto, lo dejo arriba
 };
 
-module.exports = { generarJWT };
+const comprobarJWT = async (token = "") => {
+  try {
+    if (token.length < 10) {
+      return null;
+    }
+    const { data } = jwt.verify(token, process.env.SECRETKEY);
+    const usuario = await Usuario.findById(data.uid);
+    if (usuario) {
+      return usuario.estado ? usuario : null;
+    } else {
+      return null;
+    }
+  } catch (err) {
+    return null;
+  }
+};
+
+module.exports = { generarJWT, comprobarJWT };
