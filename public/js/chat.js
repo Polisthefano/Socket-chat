@@ -6,11 +6,11 @@ let url = window.location.hostname.includes("localhost")
 url = `${url}${window.location.host}/api/auth/`;
 
 //HTML REFERENCES
-const txtUid = document.querySelector(txtUid);
-const txtMsg = document.querySelector(txtMsg);
-const ulUsuarios = document.querySelector(ulUsuarios);
-const ulMensajes = document.querySelector(ulMensajes);
-const btnLogout = document.querySelector(btnLogout);
+const txtUid = document.querySelector("#txtUid");
+const txtMsg = document.querySelector("#txtMsg");
+const ulUsuarios = document.querySelector("#ulUsuarios");
+const ulMensajes = document.querySelector("#ulMensajes");
+const btnLogout = document.querySelector("#btnLogout");
 
 const validarJWT = async () => {
   const token = localStorage.getItem("token") || "";
@@ -23,7 +23,6 @@ const validarJWT = async () => {
     const resp = await fetch(url, {
       headers: { token_access: token },
     });
-
     if (resp.ok) {
       const { user, token: newToken } = await resp.json();
       document.title = user.nombre;
@@ -45,19 +44,21 @@ const conectarSocket = async () => {
     },
   });
 
-  socket.on("connect", () => {
+  socketServer.on("connect", () => {
     console.log("sockets online");
   });
 
-  socket.on("disconnect", () => {
+  socketServer.on("disconnect", () => {
     console.log("sockets offline");
   });
 
-  socket.on("recibir-mensajes", () => {});
+  socketServer.on("recibir-mensajes", () => {});
 
-  socket.on("usuarios-activos", () => {});
+  socketServer.on("usuarios-activos", (payload) => {
+    console.log(payload);
+  });
 
-  socket.on("mensaje-privado", () => {});
+  socketServer.on("mensaje-privado", () => {});
 };
 
 const main = async () => {

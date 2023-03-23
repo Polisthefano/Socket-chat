@@ -11,12 +11,21 @@ form.addEventListener("submit", (event) => {
     //itera todos los elementos del formulario
     if (el.name.length > 0) body[el.name] = el.value; //si el elemento tiene name, es decir, solo los inputs van a entrar
   }
-  fetch(url + "login", {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: { "Content-Type": "application/json" },
+  new Promise((resolve, reject) => {
+    fetch(url + "login", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => {
+        if (res.ok) resolve(res.json());
+        else reject(res);
+      })
+      .catch((error) => {
+        reject(error);
+      });
   })
-    .then((res) => res.json())
+
     .then(({ token }) => {
       //al parecer fetch en la primer response devuelve una promise por eso hay que concatenarla
       callBackLogin(token);
@@ -32,7 +41,12 @@ function handleCredentialResponse(response) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id_token: response.credential }), //al enviar en los headers el type el body siempre debe ir con JSON.stringify
   })
-    .then((res) => res.json())
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(res);
+      }
+      return res.json();
+    })
     .then(({ token }) => {
       //al parecer fetch en la primer response devuelve una promise por eso hay que concatenarla
       callBackLogin(token);
